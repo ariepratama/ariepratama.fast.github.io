@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="shortcut icon" type="image/x-icon" href="/fastblog/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Generative Models | Learning in Notebook using fastblog</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Generative Models" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Algorithms that tries to learn mappings directly from space input $\X$ to the labels $y$, or tries to map $p(y x)$ directly, is called discriminative learning algorithms" />
+<meta property="og:description" content="Algorithms that tries to learn mappings directly from space input $\X$ to the labels $y$, or tries to map $p(y x)$ directly, is called discriminative learning algorithms" />
+<link rel="canonical" href="https://ariepratama.github.io/fastblog/machine-learning/supervised/naive-bayes/gaussian-discriminant-analysis/2020/03/03/CS229-2-Generative-Model.html" />
+<meta property="og:url" content="https://ariepratama.github.io/fastblog/machine-learning/supervised/naive-bayes/gaussian-discriminant-analysis/2020/03/03/CS229-2-Generative-Model.html" />
+<meta property="og:site_name" content="Learning in Notebook using fastblog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-03-03T00:00:00-06:00" />
+<script type="application/ld+json">
+{"mainEntityOfPage":{"@type":"WebPage","@id":"https://ariepratama.github.io/fastblog/machine-learning/supervised/naive-bayes/gaussian-discriminant-analysis/2020/03/03/CS229-2-Generative-Model.html"},"description":"Algorithms that tries to learn mappings directly from space input $\\X$ to the labels $y$, or tries to map $p(y x)$ directly, is called discriminative learning algorithms","@type":"BlogPosting","url":"https://ariepratama.github.io/fastblog/machine-learning/supervised/naive-bayes/gaussian-discriminant-analysis/2020/03/03/CS229-2-Generative-Model.html","headline":"Generative Models","dateModified":"2020-03-03T00:00:00-06:00","datePublished":"2020-03-03T00:00:00-06:00","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  <link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/fastblog/assets/main.css">
+  <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://ariepratama.github.io/fastblog/feed.xml" title="Learning in Notebook using fastblog" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"> </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+          delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+          ]}
+        );
+      });
+    </script>
+  
+
+  <script>
+  function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+  }
+  window.onload = wrap_img;
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      // add link icon to anchor tags
+      var elem = document.querySelectorAll(".anchor-link")
+      elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+      // remove paragraph tags in rendered toc (happens from notebooks)
+      var toctags = document.querySelectorAll(".toc-entry")
+      toctags.forEach(e => (e.firstElementChild.innerText = e.firstElementChild.innerText.replace('¶', '')))
+    });
+  </script>
+</head><body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/fastblog/">Learning in Notebook using fastblog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/fastblog/about/">About Me</a><a class="page-link" href="/fastblog/search/">Search</a><a class="page-link" href="/fastblog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Generative Models</h1><p class="page-description">Algorithms that tries to learn mappings directly from space input $\X$ to the labels $y$, or tries to map $p(y|x)$ directly, is called **discriminative learning algorithms**</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-03-03T00:00:00-06:00" itemprop="datePublished">
+        Mar 3, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      3 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/fastblog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/fastblog/categories/#supervised">supervised</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/fastblog/categories/#naive-bayes">naive-bayes</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/fastblog/categories/#gaussian-discriminant-analysis">gaussian-discriminant-analysis</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+<a href="https://github.com/ariepratama/fastblog/tree/master/_notebooks/2020-03-03-CS229-2-Generative-Model-.ipynb" role="button">
+    <img class="notebook-badge-image" src="https://img.shields.io/static/v1?label=&message=View%20On%20GitHub&color=586069&logo=github&labelColor=2f363d">
+</a>
+</div><div class="px-2">
+    <a href="https://colab.research.google.com/github/ariepratama/fastblog/blob/master/_notebooks/2020-03-03-CS229-2-Generative-Model-.ipynb">
+        <img class="notebook-badge-image" src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#Gaussian-Discriminant-Analysis">Gaussian Discriminant Analysis¶</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#GDA-and-Logistic-Regression">GDA and Logistic Regression¶</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Naive-Bayes">Naive Bayes¶</a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2020-03-03-CS229-2-Generative-Model-.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Algorithms that tries to learn mappings directly from space input $\\X$ to the labels $y$, or tries to map $p(y|x)$ directly, is called <strong>discriminative learning algorithms</strong></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Algorithms that tries to learn $p(x|y)$ then tries to infer $p(y|x)$ by bayes rules, is called <strong>generative learning algorithms</strong>.</p>
+<p>Note: Bayes Rule:</p>
+$$
+p(y|x) = \frac{p(x|y)p(y)}{p(x)}
+$$<p>but then to calculate $p(y|x)$, we don't actually need to calculate denominator</p>
+$$\begin{eqnarray}
+arg \space max_y p(y | x) &amp;=&amp; arg \space max_y \space \frac{p(x | y) p(y)}{p(x)}\\
+&amp;=&amp;arg \space max_y p(x|y)p(y)
+\end{eqnarray}$$
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Gaussian-Discriminant-Analysis">
+<a class="anchor" href="#Gaussian-Discriminant-Analysis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Gaussian Discriminant Analysis<a class="anchor-link" href="#Gaussian-Discriminant-Analysis">¶</a>
+</h2>
+<ul>
+<li>assume that $p(x|y)$ distributed according to <strong>multivariate normal distributions</strong>
+$$
+p(x;\mu, \Sigma) = \frac{1}{(2\phi)^{d/2} |\Sigma|^{1/2}}exp \space \left(-\frac{1}{2}(x-\mu)^T \Sigma^{-1}(x-\mu) \right)
+$$</li>
+<li>feature $x$ is continuous-valued random variables.</li>
+</ul>
+$$\begin{eqnarray}
+y &amp;\sim&amp; Bernoulli(\phi)\\
+x|y=0 &amp;\sim&amp; \mathcal{N}(\mu_0, \Sigma)\\
+x|y=1 &amp;\sim&amp; \mathcal{N}(\mu_1, \Sigma)
+\end{eqnarray}$$<h3 id="GDA-and-Logistic-Regression">
+<a class="anchor" href="#GDA-and-Logistic-Regression" aria-hidden="true"><span class="octicon octicon-link"></span></a>GDA and Logistic Regression<a class="anchor-link" href="#GDA-and-Logistic-Regression">¶</a>
+</h3>
+<p>GDA Model:</p>
+$$
+p(y=1 | x;\phi, \Sigma, \mu_0, \mu_1) = \frac{1}{1 + exp(-\theta^Tx)}
+$$<p>where $\theta$ is appropriate function of $\phi,\Sigma, \mu_0, \mu_1$</p>
+<p>while $p(x|y)$ is multivariate gaussian then $p(y|x)$ necessarily follows a logistic function.</p>
+<p>But, if $p(y|x)$ being a logistic function does not imply $p(x|y)$ is multivariate gaussian.</p>
+<p>Thus,</p>
+<blockquote>
+<p><strong>GDA makes stronger modeling assumptions about the data than does logistic regression</strong>.</p>
+</blockquote>
+<p>if the assumption are correct (the data is gaussian), then GDA will find better fits to the data --&gt; a better model, and GDA is asymptotically efficient.</p>
+<p>or</p>
+<p>if the training sets is very large, then there is no algorithm is strictly better than GDA.</p>
+<p><strong>However,</strong>
+by making significantly weaker assumptions, logistic regression is more robust and less sensitive to incorrect modeling assumptions. For example if $x|y = 0 \sim \text{Poisson}(\lambda_0)$ and $x|y=1 \sim \text{Poisson}{lambda_1}$, then $p(y|x)$ will be logistic, but we won't get good result by fitting GDA.</p>
+<p>Summary</p>
+<blockquote>
+<p>GDA makes stonger modeling assumptions, and is more data efficient <strong>when the modeling assumptions are correct or at least approximately correct</strong>. Logistic regression makes weaker assumptions, and <strong>is significantly more robust to deviations from modeling assumptions</strong>.</p>
+</blockquote>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Naive-Bayes">
+<a class="anchor" href="#Naive-Bayes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Naive Bayes<a class="anchor-link" href="#Naive-Bayes">¶</a>
+</h2>
+<p>GDA could be used if the feature vector $x$ is continuous, real valued vectors. What about discrete-valued? we will use classifying spam and ham example from lecture notes week 2 on CS229 by Andrew Ng.</p>
+<p>to model $p(x|y)$, we will assume that $x_i$'s are conditionally independent given $y$. This is called <strong>Naive Bayes assumption</strong>, then the classifier is called <strong>Naive Bayes classifier</strong>.</p>
+$$
+p(x|y) = \prod_{j=1}^{d}p(x_j|y)
+$$<p>where</p>
+<p>$j$ is the word in vocab index</p>
+$$
+\mathcal{L}(\phi_y, \phi_{j|y=0}, \phi_{j|y=1}) = \prod_{i=1}^{n}p(x^{(i)}, y^{(i)})
+$$<p>maximizing this w.r.t $\phi_y, \phi_{j|y=0}, \phi_{j|y=1}$ gives the maximum likelihood estimates:</p>
+$$\begin{eqnarray}
+\phi_{j|y=1} &amp;=&amp; \frac{\sum_{i=1}^{n} 1 \{ x_j^{(i)} = 1 \wedge y^{(i)} = 1\}}{\sum_{j=1}^{n} 1 \{ y^{(i)} = 1\}} \\
+\phi_{j|y=0} &amp;=&amp; \frac{\sum_{i=1}^{n} 1 \{ x_j^{(i)} = 1 \wedge y^{(i)} = 0\}}{\sum_{j=1}^{n} 1 \{ y^{(i)} = 0\}} \\
+\phi_y &amp;=&amp; \frac{\sum_{i=1}^{n} 1\{ y^{(i)} = 1\}}{n}
+\end{eqnarray}$$<p>read example: $\phi_{j|y=1}$ is the fraction of spam ($y=1$) emails in which word $j$ appear.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">phi_x_given_y</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">condition_y</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Args</span>
+<span class="sd">    ---</span>
+<span class="sd">    x: array of documents, each has been splitted per token</span>
+<span class="sd">    y: labels</span>
+<span class="sd">    condition_y: conditioned label</span>
+<span class="sd">    """</span>
+    <span class="k">def</span> <span class="nf">_combine</span><span class="p">(</span><span class="n">list_of_counters</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span><span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        producing map of word and total count in training data</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">word_counter</span> <span class="ow">in</span> <span class="n">list_of_counters</span><span class="p">:</span>            
+            <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">word_counter</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="n">word_counter</span><span class="p">[</span><span class="n">word</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span>
+    
+    <span class="n">filtered_x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="n">condition_y</span><span class="p">]</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">_combine</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">Counter</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">filtered_x</span><span class="p">)))</span>
+    
+    <span class="n">words</span><span class="p">,</span> <span class="n">word_counts</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combined</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span> 
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">combined</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="n">condition_y</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">prob_xs_given_y</span> <span class="o">=</span> <span class="n">word_counts</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">word_counts</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">words</span><span class="p">,</span> <span class="n">prob_xs_given_y</span>
+
+<span class="k">def</span> <span class="nf">phi_y</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">condition_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">y</span><span class="p">[</span><span class="n">y</span><span class="o">==</span><span class="n">condition_y</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">learn</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+    <span class="n">all_possible_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">p_x_given_ys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">yi</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">phi_x_given_y</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yi</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">all_possible_y</span>
+    <span class="p">}</span>
+    <span class="n">p_ys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">yi</span><span class="p">:</span> <span class="n">phi_y</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">all_possible_y</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">p_x_given_ys</span><span class="p">,</span> <span class="n">p_ys</span>
+
+<span class="k">def</span> <span class="nf">h_x</span><span class="p">(</span><span class="n">p_x_given_ys</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">p_ys</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">p_x_given_ys_res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p_x_given_ys</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    
+    <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">p_x_given_ys</span><span class="p">:</span>
+        <span class="n">p_x_given_y</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">p_x_given_ys</span><span class="p">[</span><span class="n">yi</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">p_x_given_y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">p_x_given_y</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">p_x_given_y</span> <span class="o">*=</span> <span class="n">p_x_given_ys</span><span class="p">[</span><span class="n">yi</span><span class="p">][</span><span class="n">word</span><span class="p">]</span>
+        
+        <span class="n">p_x_given_ys_res</span><span class="p">[</span><span class="n">yi</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_x_given_y</span>
+        
+    <span class="n">p_ys_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">p_ys</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="n">nominator</span> <span class="o">=</span> <span class="n">p_x_given_ys_res</span> <span class="o">*</span> <span class="n">p_ys_arr</span>
+    <span class="n">px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_x_given_ys_res</span> <span class="o">*</span> <span class="n">p_ys_arr</span><span class="p">)</span> <span class="c1">#denominator</span>
+    
+    <span class="n">p_y_given_x</span> <span class="o">=</span> <span class="n">nominator</span><span class="o">/</span><span class="n">px</span>
+    <span class="n">max_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">p_y_given_x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">max_i</span><span class="p">,</span> <span class="n">p_y_given_x</span><span class="p">[</span><span class="n">max_i</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="s1">'a a a b'</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
+    <span class="s1">'a b a a'</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
+    <span class="s1">'b b'</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span>
+    <span class="s1">'b b a'</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="mi">1</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">,</span>
+    <span class="mi">0</span><span class="p">,</span>
+    <span class="mi">0</span>
+<span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">p_x_given_ys</span><span class="p">,</span> <span class="n">p_ys</span> <span class="o">=</span> <span class="n">learn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">h_x</span><span class="p">(</span><span class="n">p_x_given_ys</span><span class="p">,</span> <span class="n">p_ys</span><span class="p">,</span> <span class="s1">'a '</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(1, 0.7894736842105263)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+</div>
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="ariepratama/fastblog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/fastblog/machine-learning/supervised/naive-bayes/gaussian-discriminant-analysis/2020/03/03/CS229-2-Generative-Model.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/fastblog/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Learning in Notebook using fastblog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Learning in Notebook using fastblog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list">
+  <li><a href="https://github.com/ariepratama"><svg class="social svg-icon"><use xlink:href="/fastblog/assets/minima-social-icons.svg#github"></use></svg> <span class="username">ariepratama</span></a></li><li><a href="https://www.twitter.com/ariepratama"><svg class="social svg-icon"><use xlink:href="/fastblog/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">ariepratama</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Self learning space</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
